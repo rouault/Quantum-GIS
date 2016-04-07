@@ -29,12 +29,12 @@ matrix:
     #      sources:
     #        - llvm-toolchain-precise-3.6
     #        - ubuntu-toolchain-r-test
-    v        - george-edison55-precise-backports # doxygen 1.8.3
+    #        - george-edison55-precise-backports # doxygen 1.8.3
     #      packages:
     #        - doxygen
     #        - bison
     #        - flex
-    v        - graphviz
+    #        - graphviz
     #        - libpq-dev
     #        - libfcgi-dev
     #        - pkg-config
