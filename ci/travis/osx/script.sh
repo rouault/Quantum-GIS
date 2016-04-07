@@ -10,6 +10,7 @@ make -j3 spatialiteprovider
 make -j3 wfsprovider
 make -j3 python_module_qgis__core
 make -j3 pytesting
+make -j3 -f python/Makefile
 #make -j3 qgistesting
 
 export LD_LIBRARY_PATH=NOTFOUND:$PWD/output/lib:
