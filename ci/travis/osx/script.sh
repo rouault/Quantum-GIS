@@ -10,16 +10,16 @@ make -j3 spatialiteprovider
 make -j3 wfsprovider
 make -j3 python_module_qgis__core
 make -j3 pytesting
-make -j3 qgistesting
+#make -j3 qgistesting
 
-export LD_LIBRARY_PATH=NOTFOUND:/Users/travis/build/qgis/QGIS/build/output/lib:
-export PYTHONPATH=/Users/travis/build/qgis/QGIS/build/output/python/:/Users/travis/build/qgis/QGIS/build/output/python/plugins:/Users/travis/build/qgis/QGIS/tests/src/python:
-export QGIS_PREFIX_PATH=/Users/travis/build/qgis/QGIS/build/output
+export LD_LIBRARY_PATH=NOTFOUND:$PWD/output/lib:
+export PYTHONPATH=$PWD/output/python/:$PWD/output/python/plugins:$PWD/../tests/src/python:
+export QGIS_PREFIX_PATH=$PWD/output
 
-/usr/local/bin/python2.7 /Users/travis/build/qgis/QGIS/tests/src/python/test_provider_wfs.py -v
+/usr/local/bin/python2.7 ../tests/src/python/test_provider_wfs.py -v
 
 for i in $(seq 1 50); do
    echo "Iteration $i";
-  /usr/local/bin/python2.7 /Users/travis/build/qgis/QGIS/tests/src/python/test_provider_wfs.py -v;
+  /usr/local/bin/python2.7 ../tests/src/python/test_provider_wfs.py -v;
 done
 
