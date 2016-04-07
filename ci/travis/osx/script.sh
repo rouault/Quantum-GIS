@@ -5,7 +5,12 @@ export PATH=/usr/bin:${PATH}
 #ctest -V -E 'qgis_openstreetmaptest|qgis_wcsprovidertest|PyQgsServer' -S ./qgis-test-travis.ctest --output-on-failure
 
 cd build
-make -j3 >/dev/null
+#make -j3 >/dev/null
+make -j3 spatialiteprovider
+make -j3 wfsprovider
+make -j3 python_module_qgis__core
+make -j3 pytesting
+make -j3 qgistesting
 
 export LD_LIBRARY_PATH=NOTFOUND:/Users/travis/build/qgis/QGIS/build/output/lib:
 export PYTHONPATH=/Users/travis/build/qgis/QGIS/build/output/python/:/Users/travis/build/qgis/QGIS/build/output/python/plugins:/Users/travis/build/qgis/QGIS/tests/src/python:
