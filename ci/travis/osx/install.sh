@@ -8,4 +8,6 @@ cmake -DWITH_SERVER=ON -DWITH_STAGED_PLUGINS=ON -DWITH_GRASS=OFF \
           -DWITH_QWTPOLAR=OFF -DWITH_PYSPATIALITE=ON \
           -DQWT_INCLUDE_DIR=/usr/local/opt/qwt/lib/qwt.framework/Headers/ \
           -DQWT_LIBRARY=/usr/local/opt/qwt/lib/qwt.framework/qwt \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations" -DCMAKE_BUILD_TYPE=Debug .. 
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations" -DCMAKE_BUILD_TYPE=RelWithDebInfo .. 
+
+# Debug
