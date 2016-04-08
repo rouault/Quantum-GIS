@@ -17,10 +17,8 @@ export LD_LIBRARY_PATH=NOTFOUND:$PWD/output/lib:
 export PYTHONPATH=$PWD/output/python/:$PWD/output/python/plugins:$PWD/../tests/src/python:
 export QGIS_PREFIX_PATH=$PWD/output
 
-/usr/local/bin/python2.7 ../tests/src/python/test_provider_wfs.py -v
-
 for i in $(seq 1 50); do
    echo "Iteration $i";
-  /usr/local/bin/python2.7 ../tests/src/python/test_provider_wfs.py -v;
+  /usr/local/bin/python2.7 ../tests/src/python/test_provider_wfs.py -v > log.txt 2>&1 || cat log.txt ;
 done
 
