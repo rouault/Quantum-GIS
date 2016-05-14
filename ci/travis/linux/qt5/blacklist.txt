@@ -3,7 +3,6 @@ ProcessingQgisAlgorithmsTest
 PyQgsComposerPicture
 PyQgsDelimitedTextProvider
 PyQgsGeometryTest
-PyQgsJSONUtils
 PyQgsLocalServer
 PyQgsMapUnitScale
 PyQgsPalLabelingCanvas

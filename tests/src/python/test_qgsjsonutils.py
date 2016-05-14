@@ -102,7 +102,7 @@ class TestQgsJSONUtils(unittest.TestCase):
         """ test encoding various values for use in GeoJSON strings """
         self.assertEqual(QgsJSONUtils.encodeValue(NULL), 'null')
         self.assertEqual(QgsJSONUtils.encodeValue(5), '5')
-        self.assertEqual(QgsJSONUtils.encodeValue(5.9), '5.9')
+        self.assertEqual(QgsJSONUtils.encodeValue(1.2), '1.2')
         self.assertEqual(QgsJSONUtils.encodeValue(5999999999), '5999999999')
         self.assertEqual(QgsJSONUtils.encodeValue('string'), '"string"')
         self.assertEqual(QgsJSONUtils.encodeValue('str\ning'), '"str\\ning"')
@@ -136,10 +136,10 @@ class TestQgsJSONUtils(unittest.TestCase):
 
         feature = QgsFeature(fields, 5)
         feature.setGeometry(QgsGeometry(QgsPointV2(5, 6)))
-        feature.setAttributes(['Valsier Peninsula', 6.8, 198])
+        feature.setAttributes(['Valsier Peninsula', 1.2, 198])
 
         expected = """{"name":"Valsier Peninsula",
-"cost":6.8,
+"cost":1.2,
 "population":198}"""
         self.assertEqual(QgsJSONUtils.exportAttributes(feature), expected)
 
@@ -152,7 +152,7 @@ class TestQgsJSONUtils(unittest.TestCase):
 
         feature = QgsFeature(fields, 5)
         feature.setGeometry(QgsGeometry(QgsPointV2(5, 6)))
-        feature.setAttributes(['Valsier Peninsula', 6.8, 198])
+        feature.setAttributes(['Valsier Peninsula', 1.2, 198])
 
         exporter = QgsJSONExporter()
 
@@ -163,7 +163,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "Point", "coordinates": [5, 6]},
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }"""
@@ -182,7 +182,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "LineString", "coordinates": [ [5, 6], [15, 16]]},
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }"""
@@ -199,7 +199,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "Point", "coordinates": [5.444, 6.333]},
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }"""
@@ -230,7 +230,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    "geometry":
    {"type": "Point", "coordinates": [5, 6]},
    "properties":{
-      "cost":6.8
+      "cost":1.2
    }
 }"""
         self.assertEqual(exporter.exportFeature(feature), expected)
@@ -305,7 +305,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    "geometry":null,
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }"""
@@ -343,7 +343,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    "geometry":null,
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }"""
@@ -356,7 +356,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    "geometry":null,
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198,
       "extra":"val1",
       "extra2":2
@@ -542,7 +542,7 @@ class TestQgsJSONUtils(unittest.TestCase):
 
         feature = QgsFeature(fields, 5)
         feature.setGeometry(QgsGeometry(QgsPointV2(5, 6)))
-        feature.setAttributes(['Valsier Peninsula', 6.8, 198])
+        feature.setAttributes(['Valsier Peninsula', 1.2, 198])
 
         exporter = QgsJSONExporter()
 
@@ -556,7 +556,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "Point", "coordinates": [5, 6]},
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 }
@@ -566,7 +566,7 @@ class TestQgsJSONUtils(unittest.TestCase):
         # multiple features
         feature2 = QgsFeature(fields, 6)
         feature2.setGeometry(QgsGeometry(QgsPointV2(7, 8)))
-        feature2.setAttributes(['Henry Gale Island', 9.7, 38])
+        feature2.setAttributes(['Henry Gale Island', 1.2, 38])
 
         expected = """{ "type": "FeatureCollection",
     "features":[
@@ -577,7 +577,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "Point", "coordinates": [5, 6]},
    "properties":{
       "name":"Valsier Peninsula",
-      "cost":6.8,
+      "cost":1.2,
       "population":198
    }
 },
@@ -588,7 +588,7 @@ class TestQgsJSONUtils(unittest.TestCase):
    {"type": "Point", "coordinates": [7, 8]},
    "properties":{
       "name":"Henry Gale Island",
-      "cost":9.7,
+      "cost":1.2,
       "population":38
    }
 }
