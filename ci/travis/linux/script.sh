@@ -21,5 +21,9 @@ export CCACHE_TEMPDIR=/tmp
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+export QGIS_PREFIX_PATH=/home/travis/build/rouault/Quantum-GIS/build/output
+
+CPL_DEBUG=ON xvfb-run valgrind python  tests/src/python/test_provider_ogr_gpkg.py -v
+
 xvfb-run ctest -V -E "qgis_openstreetmaptest|qgis_wcsprovidertest|PyQgsWFSProviderGUI|qgis_ziplayertest|$(cat ${DIR}/blacklist.txt | paste -sd '|' -)" -S ./qgis-test-travis.ctest --output-on-failure
 # xvfb-run ctest -V -E "qgis_openstreetmaptest|qgis_wcsprovidertest" -S ./qgis-test-travis.ctest --output-on-failure
