@@ -28,4 +28,4 @@ export QGIS_PREFIX_PATH=/home/travis/build/rouault/Quantum-GIS/build/output
 export PYTHONPATH=${QGIS_PREFIX_PATH}/python:$PYTHONPATH
 echo $PWD
 ls -al $QGIS_PREFIX_PATH
-CPL_DEBUG=ON xvfb-run valgrind python  tests/src/python/test_provider_ogr_gpkg.py -v
+CPL_DEBUG=ON xvfb-run valgrind --num-callers=40 python  tests/src/python/test_db_manager_gpkg.py -v
