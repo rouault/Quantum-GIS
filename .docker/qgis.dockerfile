@@ -53,7 +53,7 @@ RUN SUCCESS=OK \
   -DQt53DExtras_DIR="/QGIS/external/qt3dextra-headers/cmake/Qt53DExtras" \
   -DCMAKE_PREFIX_PATH="/QGIS/external/qt3dextra-headers" \
   .. \
-  && ninja install || SUCCESS=FAILED \
+  && ninja -k 0 install || SUCCESS=FAILED \
   && echo "$SUCCESS" > /QGIS/build_exit_value
 
 # Additional run-time dependencies
