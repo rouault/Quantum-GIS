@@ -424,7 +424,7 @@ void QgsRasterHistogramWidget::refreshHistogram()
                      1 + ( int )( 255.0 * qrand() / ( RAND_MAX + 1.0 ) ) );
   }
   //randomise seed again
-  qsrand( time( nullptr ) );
+  qsrand( static_cast<uint>( time( nullptr ) ) );
 
   // assign colors to each band, depending on the current RGB/gray band selection
   // grayscale

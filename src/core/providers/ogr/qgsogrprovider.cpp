@@ -694,7 +694,7 @@ void QgsOgrProvider::addSubLayerDetailsToSubLayerList( int i, QgsOgrLayer *layer
 
 uint QgsOgrProvider::subLayerCount() const
 {
-  uint count = layerCount();
+  uint count = static_cast<uint>( layerCount() );
 
   QString errCause;
   QgsOgrLayerUniquePtr layerStyles = QgsOgrProviderUtils::getLayer( mFilePath, QStringLiteral( "layer_styles" ), errCause );
