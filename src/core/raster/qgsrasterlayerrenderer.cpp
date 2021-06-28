@@ -254,12 +254,15 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
     layer->refreshRendererIfNeeded( rasterRenderer, rendererContext.extent() );
   }
 
+  mPipe->evaluateDataDefinedProperties( rendererContext.expressionContext() );
+
   const QgsRasterLayerTemporalProperties *temporalProperties = qobject_cast< const QgsRasterLayerTemporalProperties * >( layer->temporalProperties() );
   if ( temporalProperties->isActive() && renderContext()->isTemporal() )
   {
     switch ( temporalProperties->mode() )
     {
       case QgsRasterLayerTemporalProperties::ModeFixedTemporalRange:
+      case QgsRasterLayerTemporalProperties::ModeRedrawLayerOnly:
         break;
 
       case QgsRasterLayerTemporalProperties::ModeTemporalRangeFromDataProvider:

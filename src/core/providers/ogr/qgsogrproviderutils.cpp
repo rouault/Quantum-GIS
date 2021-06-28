@@ -21,6 +21,7 @@ email                : nyall dot dawson at gmail dot com
 #include "qgsmessagelog.h"
 #include "qgsvectorfilewriter.h"
 #include "qgsauthmanager.h"
+#include "qgsprovidersublayerdetails.h"
 
 #include <ogr_srs_api.h>
 #include <cpl_port.h>
@@ -2291,6 +2292,170 @@ bool QgsOgrProviderUtils::canDriverShareSameDatasetAmongLayers( const QString &d
          !( updateMode && dsName.endsWith( QLatin1String( ".shp.zip" ), Qt::CaseInsensitive ) );
 }
 
+QList< QgsProviderSublayerDetails > QgsOgrProviderUtils::querySubLayerList( int i, QgsOgrLayer *layer, const QString &driverName, Qgis::SublayerQueryFlags flags, bool isSubLayer, const QString &baseUri, bool hasSingleLayerOnly, QgsFeedback *feedback )
+{
+  const QString layerName = QString::fromUtf8( layer->name() );
+
+  if ( !isSubLayer && ( layerName == QLatin1String( "layer_styles" ) ||
+                        layerName == QLatin1String( "qgis_projects" ) ) )
+  {
+    // Ignore layer_styles (coming from QGIS styling support) and
+    // qgis_projects (coming from http://plugins.qgis.org/plugins/QgisGeopackage/)
+    return {};
+  }
+
+  QStringList skippedLayerNames;
+  if ( driverName == QLatin1String( "SQLite" ) )
+  {
+    skippedLayerNames = QgsSqliteUtils::systemTables();
+  }
+  if ( ( driverName == QLatin1String( "SQLite" ) && layerName.contains( QRegularExpression( QStringLiteral( "idx_.*_geom(etry)?($|_.*)" ), QRegularExpression::PatternOption::CaseInsensitiveOption ) ) )
+       || skippedLayerNames.contains( layerName ) )
+  {
+    return {};
+  }
+
+  // Get first column name,
+  // TODO: add support for multiple
+  QString geometryColumnName;
+  OGRwkbGeometryType layerGeomType = wkbUnknown;
+  const bool slowGeomTypeRetrieval = driverName == QLatin1String( "OAPIF" ) || driverName == QLatin1String( "WFS3" ) || driverName == QLatin1String( "PGeo" );
+  if ( !slowGeomTypeRetrieval )
+  {
+    QgsOgrFeatureDefn &fdef = layer->GetLayerDefn();
+    if ( fdef.GetGeomFieldCount() )
+    {
+      OGRGeomFieldDefnH geomH = fdef.GetGeomFieldDefn( 0 );
+      geometryColumnName = QString::fromUtf8( OGR_GFld_GetNameRef( geomH ) );
+    }
+    layerGeomType = fdef.GetGeomType();
+  }
+
+  QString longDescription;
+  if ( driverName == QLatin1String( "OAPIF" ) || driverName == QLatin1String( "WFS3" ) )
+  {
+    longDescription = layer->GetMetadataItem( QStringLiteral( "TITLE" ) );
+  }
+
+  QgsDebugMsgLevel( QStringLiteral( "id = %1 name = %2 layerGeomType = %3 longDescription = %4" ).arg( i ).arg( layerName ).arg( layerGeomType ). arg( longDescription ), 2 );
+
+
+  QVariantMap parts = QgsOgrProviderMetadata().decodeUri( baseUri );
+  if ( !hasSingleLayerOnly )
+    parts.insert( QStringLiteral( "layerName" ), layerName );
+  else
+    parts.remove( QStringLiteral( "layerName" ) );
+
+  if ( slowGeomTypeRetrieval || wkbFlatten( layerGeomType ) != wkbUnknown || !( flags & Qgis::SublayerQueryFlag::ResolveGeometryType ) )
+  {
+    const long long layerFeatureCount = ( flags & Qgis::SublayerQueryFlag::CountFeatures )
+                                        ? layer->GetApproxFeatureCount()
+                                        : static_cast< long >( Qgis::FeatureCountState::Uncounted );
+
+    QgsProviderSublayerDetails details;
+    details.setLayerNumber( i );
+    details.setName( layerName );
+    details.setFeatureCount( layerFeatureCount );
+    details.setWkbType( QgsOgrUtils::ogrGeometryTypeToQgsWkbType( layerGeomType ) );
+    details.setGeometryColumnName( geometryColumnName );
+    details.setDescription( longDescription );
+    details.setProviderKey( QStringLiteral( "ogr" ) );
+
+    const QString uri = QgsOgrProviderMetadata().encodeUri( parts );
+    details.setUri( uri );
+
+    return { details };
+  }
+  else
+  {
+    QgsDebugMsgLevel( QStringLiteral( "Unknown geometry type, count features for each geometry type" ), 2 );
+    // Add virtual sublayers for supported geometry types if layer type is unknown
+    // Count features for geometry types
+    QMap<OGRwkbGeometryType, int> fCount;
+    // TODO: avoid reading attributes, setRelevantFields cannot be called here because it is not constant
+
+    layer->ResetReading();
+    gdal::ogr_feature_unique_ptr fet;
+    while ( fet.reset( layer->GetNextFeature() ), fet )
+    {
+      OGRGeometryH geom = OGR_F_GetGeometryRef( fet.get() );
+      if ( geom )
+      {
+        OGRwkbGeometryType gType = QgsOgrProviderUtils::ogrWkbSingleFlatten( OGR_G_GetGeometryType( geom ) );
+        fCount[gType] = fCount.value( gType ) + 1;
+      }
+
+      if ( feedback && feedback->isCanceled() )
+        break;
+    }
+    layer->ResetReading();
+    // it may happen that there are no features in the layer, in that case add unknown type
+    // to show to user that the layer exists but it is empty
+    if ( fCount.isEmpty() )
+    {
+      fCount[wkbUnknown] = 0;
+    }
+
+    // List TIN and PolyhedralSurface as Polygon
+    if ( fCount.contains( wkbTIN ) )
+    {
+      fCount[wkbPolygon] = fCount.value( wkbPolygon ) + fCount[wkbTIN];
+      fCount.remove( wkbTIN );
+    }
+    if ( fCount.contains( wkbPolyhedralSurface ) )
+    {
+      fCount[wkbPolygon] = fCount.value( wkbPolygon ) + fCount[wkbPolyhedralSurface];
+      fCount.remove( wkbPolyhedralSurface );
+    }
+    // When there are CurvePolygons, promote Polygons
+    if ( fCount.contains( wkbPolygon ) && fCount.contains( wkbCurvePolygon ) )
+    {
+      fCount[wkbCurvePolygon] += fCount.value( wkbPolygon );
+      fCount.remove( wkbPolygon );
+    }
+    // When there are CompoundCurves, promote LineStrings and CircularStrings
+    if ( fCount.contains( wkbLineString ) && fCount.contains( wkbCompoundCurve ) )
+    {
+      fCount[wkbCompoundCurve] += fCount.value( wkbLineString );
+      fCount.remove( wkbLineString );
+    }
+    if ( fCount.contains( wkbCircularString ) && fCount.contains( wkbCompoundCurve ) )
+    {
+      fCount[wkbCompoundCurve] += fCount.value( wkbCircularString );
+      fCount.remove( wkbCircularString );
+    }
+
+    QList< QgsProviderSublayerDetails > res;
+    res.reserve( fCount.size() );
+
+    bool bIs25D = wkbHasZ( layerGeomType );
+    QMap<OGRwkbGeometryType, int>::const_iterator countIt = fCount.constBegin();
+    for ( ; countIt != fCount.constEnd(); ++countIt )
+    {
+      if ( feedback && feedback->isCanceled() )
+        break;
+
+      QgsProviderSublayerDetails details;
+      details.setLayerNumber( i );
+      details.setName( layerName );
+      details.setFeatureCount( fCount.value( countIt.key() ) );
+      details.setWkbType( QgsOgrUtils::ogrGeometryTypeToQgsWkbType( ( bIs25D ) ? wkbSetZ( countIt.key() ) : countIt.key() ) );
+      details.setGeometryColumnName( geometryColumnName );
+      details.setDescription( longDescription );
+      details.setProviderKey( QStringLiteral( "ogr" ) );
+
+      if ( fCount.size() > 1 )
+        parts.insert( QStringLiteral( "geometryType" ), ogrWkbGeometryTypeName( countIt.key() ) );
+      else
+        parts.remove( QStringLiteral( "geometryType" ) );
+
+      details.setUri( QgsOgrProviderMetadata().encodeUri( parts ) );
+
+      res << details;
+    }
+    return res;
+  }
+}
 
 QgsOgrDatasetSharedPtr QgsOgrDataset::create( const QgsOgrProviderUtils::DatasetIdentification &ident,
     QgsOgrProviderUtils::DatasetWithLayers *ds )
